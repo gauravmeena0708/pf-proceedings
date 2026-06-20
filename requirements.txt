@@ -1,0 +1,9 @@
+# Core scraper (fetch action)
+beautifulsoup4>=4.12,<5
+requests>=2.32,<3
+
+# Optional OCR indexer (index action) -- only needed for full-text search.
+# Requires the Tesseract OCR engine installed on the system as well.
+# PyMuPDF>=1.24
+# pytesseract>=0.3.10
+# Pillow>=10

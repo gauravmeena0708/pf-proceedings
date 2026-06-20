@@ -1,0 +1,66 @@
+name: Fetch EPFO court orders
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Monday at 04:23 UTC. Avoid minute 0, when GitHub scheduling is busiest.
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-proceedings-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run parser tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Fetch EPFO orders
+        run: python fetch.py --action fetch
+
+      - name: Validate generated JSON
+        run: |
+          python -m json.tool proceedings-data.json > /dev/null
+          python - <<'PY'
+          import json, glob
+          d = json.load(open('proceedings-data.json', encoding='utf-8'))
+          assert d['main_count'] == len(d['records']), "main_count mismatch"
+          shard_total = sum(s['count'] for s in d['shards']['14B and 7Q'].values())
+          assert d['record_count'] == d['main_count'] + shard_total, "record_count mismatch"
+          assert d['record_count'] >= 1000, "too few records"
+          for s in d['shards']['14B and 7Q'].values():
+              json.load(open(s['file'], encoding='utf-8'))
+          print(f"OK: {d['record_count']:,} records, {len(glob.glob('shards/*.json'))} shards")
+          PY
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add proceedings-data.json shards
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -m "Update EPFO court orders data"
+          git pull --rebase
+          git push

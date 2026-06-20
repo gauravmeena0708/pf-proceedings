@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Search EPFO quasi-judicial court orders (7A, 7B, 7C, 14B & 7Q, 26B, 8PS) by establishment, diary number, date, or full text.">
+    <title>EPFO Order Archive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --ink: #1f2937;
+            --ink-2: #374151;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --line-strong: #d1d5db;
+            --accent: #15803d;
+            --accent-hover: #166534;
+            --accent-soft: #ecfdf3;
+            --focus-ring: rgba(34, 197, 94, 0.3);
+            --tag-bg: #eef2f7;
+            --tag-ink: #3b4658;
+            --sans: "Inter", system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; color: var(--ink); background: var(--bg); font-family: var(--sans); font-size: 15px; line-height: 1.5; min-height: 100vh; }
+        a { color: var(--accent); }
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        button, input, select { font: inherit; color: inherit; }
+        .wrap { width: min(1200px, calc(100% - 40px)); margin: 0 auto; }
+        .topbar { border-top: 3px solid var(--accent); border-bottom: 1px solid var(--line); background: var(--surface); }
+        .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 0; }
+        .wordmark { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+        .seal { display: grid; width: 38px; height: 38px; place-items: center; border: 1.5px solid var(--accent); border-radius: 6px; color: var(--accent); font: 600 13px/1 var(--sans); letter-spacing: 0.04em; }
+        .wordmark-text strong { display: block; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+        .wordmark-text span { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
+        .badge-unofficial { display: inline-block; margin-left: 7px; padding: 2px 7px; border-radius: 999px; background: #fef3c7; color: #92400e; font: 600 9.5px/1.5 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; }
+        .source-link { color: var(--ink-2); font-size: 13px; font-weight: 500; text-decoration: none; }
+        .source-link:hover { color: var(--accent); }
+        .hero { padding: 22px 0; }
+        .ledger-stats { display: flex; flex-wrap: wrap; gap: 10px 28px; color: var(--muted); font-size: 13px; }
+        .ledger-stats b { color: var(--ink); font-weight: 500; font-size: 15px; letter-spacing: -0.01em; }
+        .toolbar { position: sticky; top: 0; z-index: 10; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); }
+        .toolbar-inner { padding: 16px 0; }
+        .search-controls { display: grid; grid-template-columns: minmax(220px, 2fr) auto minmax(140px, 1fr) minmax(120px, 1fr); gap: 12px; align-items: end; }
+        .search-wrap { position: relative; }
+        .search-wrap svg { position: absolute; top: 50%; left: 12px; width: 17px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+        .search-input { width: 100%; height: 44px; padding: 0 14px 0 38px; border: 1px solid var(--line-strong); border-radius: 6px; outline: none; background: var(--surface); color: var(--ink); transition: border-color 140ms ease, box-shadow 140ms ease; }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+        .search-button { flex: 0 0 auto; padding: 0 22px; height: 44px; border: 1px solid var(--accent); border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 130ms ease, border-color 130ms ease; }
+        .search-button:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .field { display: grid; gap: 6px; }
+        .field label { color: var(--muted); font: 600 10px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; }
+        .filter-select { width: 100%; height: 44px; padding: 0 30px 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: 500 14px/1 var(--sans); cursor: pointer; transition: border-color 140ms ease, box-shadow 140ms ease; }
+        .filter-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+        .search-hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+        .search-hint code { padding: 1px 6px; border-radius: 4px; background: var(--tag-bg); color: var(--tag-ink); font: 500 12px/1.6 var(--sans); }
+        .search-hint .sep { margin: 0 8px; opacity: 0.5; }
+        .results { padding: 22px 0 60px; }
+        .trust-note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; }
+        .results-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; min-height: 20px; }
+        .results-count { margin: 0; color: var(--ink-2); font-size: 14px; }
+        .results-count b { color: var(--ink); font-weight: 500; }
+        .table-card { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+        .ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .ledger thead th { padding: 13px 18px; border-bottom: 1px solid var(--line-strong); background: #f7f8fa; color: var(--muted); font: 600 10px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; text-align: left; }
+        .ledger col.col-diary { width: 110px; }
+        .ledger col.col-date { width: 116px; }
+        .ledger col.col-type { width: 130px; }
+        .ledger col.col-order { width: 90px; }
+        .ledger tbody td { padding: 15px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        .ledger tbody tr:last-child td { border-bottom: 0; }
+        .ledger tbody tr:hover td { background: var(--accent-soft); }
+        .ledger tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+        .mono { font-variant-numeric: tabular-nums; }
+        .cell-date .mono { color: var(--ink); font-weight: 500; white-space: nowrap; }
+        .cell-diary .mono { color: var(--ink-2); }
+        .estab-name { margin: 0; color: var(--ink); font-size: 14.5px; font-weight: 500; line-height: 1.4; }
+        .estab-code { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font: 600 10px/1.2 var(--sans); letter-spacing: 0.04em; }
+        .snippet { margin: 8px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+        mark.hl { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; }
+        .doc { display: inline-flex; padding: 5px 11px; border: 1px solid var(--line-strong); border-radius: 6px; color: var(--ink-2); background: var(--surface); font: 600 12px/1 var(--sans); text-decoration: none; transition: border-color 130ms ease, color 130ms ease, background 130ms ease; }
+        .doc:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+        .no-doc { color: var(--muted); }
+        .state { padding: 70px 24px; text-align: center; }
+        .state strong { display: block; margin-bottom: 8px; font-size: 18px; font-weight: 600; }
+        .state p { margin: 0; color: var(--muted); font-size: 14px; }
+        .state.error strong { color: #b3261e; }
+        .pagination-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; padding: 28px 0 0; }
+        .pagination-controls button { min-width: 38px; height: 38px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); color: var(--ink-2); cursor: pointer; font: 500 13px/1 var(--sans); transition: border-color 120ms ease, color 120ms ease, background 120ms ease; }
+        .pagination-controls button:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
+        .pagination-controls button:disabled { color: #b6bcc6; cursor: not-allowed; }
+        .pagination-controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .pagination-controls .ellipsis { padding: 0 4px; color: var(--muted); }
+        footer { border-top: 1px solid var(--line); background: var(--surface); }
+        .footer-inner { padding: 26px 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+        @media (max-width: 760px) {
+            .toolbar { position: static; backdrop-filter: none; }
+            .search-controls { grid-template-columns: 1fr; }
+            .ledger col { width: auto; }
+            .ledger thead { display: none; }
+            .ledger, .ledger tbody, .ledger tr, .ledger td { display: block; width: 100%; }
+            .ledger tbody tr { padding: 16px 16px 18px; border-bottom: 1px solid var(--line); }
+            .ledger tbody tr:hover td, .ledger tbody tr:hover td:first-child { background: transparent; box-shadow: none; }
+            .ledger tbody td { padding: 0; border-bottom: 0; }
+            .ledger tbody td + td { margin-top: 10px; }
+            .ledger td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--muted); font: 600 10px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; }
+            .cell-estab::before { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="wrap topbar-inner">
+            <a class="wordmark" href="./">
+                <span class="seal" aria-hidden="true">PF</span>
+                <span class="wordmark-text">
+                    <strong>EPFO Order Archive <span class="badge-unofficial">Unofficial</span></strong>
+                    <span>Independent index of public EPFO quasi-judicial orders</span>
+                </span>
+            </a>
+            <a class="source-link" href="https://eproceedings.epfindia.gov.in/epfo/public/judgments_report.php" target="_blank" rel="noopener noreferrer">Official source ↗</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="wrap">
+            <div class="ledger-stats" aria-label="Dataset summary">
+                <span><b id="stat-total">—</b> orders indexed</span>
+                <span><b id="stat-pdf">—</b> with order PDF</span>
+                <span><b id="stat-fulltext">—</b> with full-text</span>
+                <span>latest <b id="stat-latest">—</b></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="toolbar">
+        <div class="wrap toolbar-inner">
+            <div class="search-controls">
+                <div class="field">
+                    <label for="searchInput">Search orders</label>
+                    <div class="search-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                        <input type="search" id="searchInput" class="search-input" autocomplete="off" placeholder="Establishment, est code, diary no, date, or order text">
+                    </div>
+                </div>
+                <button id="searchButton" class="search-button" type="button">Search</button>
+                <div class="field">
+                    <label for="typeFilter">Case type</label>
+                    <select id="typeFilter" class="filter-select"><option value="">All types</option></select>
+                </div>
+                <div class="field">
+                    <label for="yearFilter">Year</label>
+                    <select id="yearFilter" class="filter-select"><option value="">All years</option></select>
+                </div>
+            </div>
+            <p class="search-hint">
+                <code>"exact phrase"</code><span class="sep">·</span>
+                <code>+include</code><span class="sep">·</span>
+                <code>-exclude</code><span class="sep">·</span>
+                full text searched where order PDFs have been OCR-indexed<span class="sep">·</span>
+                bulky <strong>14B &amp; 7Q</strong> orders load one year at a time — pick that case type and a year
+            </p>
+        </div>
+    </div>
+
+    <main class="results">
+        <div class="wrap">
+            <p class="trust-note">Order links open the original PDFs on <strong>eproceedings.epfindia.gov.in</strong> — always verify against the official source.</p>
+            <div class="results-head">
+                <p class="results-count" id="resultsCount" role="status" aria-live="polite"></p>
+            </div>
+            <div class="table-card" id="resultsContainer">
+                <div class="state"><strong>Loading the order index</strong><p>Fetching orders and full-text data…</p></div>
+            </div>
+            <div class="pagination-controls" id="paginationControls"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap footer-inner">
+            This is an unofficial, community-driven project and is not affiliated with EPFO.
+            For official information, please visit the
+            <a href="https://eproceedings.epfindia.gov.in" target="_blank" rel="noopener noreferrer">EPFO e-proceedings portal</a>.
+        </div>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const paginationControlsContainer = document.getElementById('paginationControls');
+        const typeFilter = document.getElementById('typeFilter');
+        const yearFilter = document.getElementById('yearFilter');
+
+        const SHARDED_TYPE = "14B and 7Q";
+
+        let mainRecords = [];          // the ~63k judgment orders, always loaded
+        let pdfPrefix = "";
+        let fieldIndex = {};           // field name -> column index in a row
+        let shardManifest = {};        // year -> { file, count }
+        const shardCache = {};         // year -> hydrated records (lazy)
+        let allIndexData = {};
+        let textMatched = [];
+        let currentFilteredData = [];
+        let currentPage = 1;
+        let currentTerms = [];
+        const itemsPerPage = 50;
+        const ocrLowerCache = Object.create(null);
+
+        function hydrate(row) {
+            const stored = row[fieldIndex.pdf];
+            const pdf = stored ? (stored.startsWith("http") ? stored : pdfPrefix + stored) : null;
+            return {
+                establishment: row[fieldIndex.establishment],
+                est_code: row[fieldIndex.est_code],
+                diary_no: row[fieldIndex.diary_no],
+                order_date: row[fieldIndex.order_date],
+                year: row[fieldIndex.year],
+                case_type_codes: row[fieldIndex.case_type_codes],
+                pdf_link: pdf,
+            };
+        }
+
+        async function loadShard(year) {
+            if (shardCache[year]) return shardCache[year];
+            const entry = shardManifest[year];
+            if (!entry) { shardCache[year] = []; return shardCache[year]; }
+            const response = await fetch(entry.file);
+            if (!response.ok) throw new Error(`HTTP ${response.status} for ${entry.file}`);
+            const shard = await response.json();
+            shardCache[year] = (shard.records || []).map(hydrate);
+            return shardCache[year];
+        }
+
+        function ocrLower(link) {
+            if (!link || !allIndexData[link]) return '';
+            if (ocrLowerCache[link] === undefined) {
+                ocrLowerCache[link] = (allIndexData[link].ocr_content || '').toLowerCase();
+            }
+            return ocrLowerCache[link];
+        }
+
+        const escapeHtml = (value = "") =>
+            String(value).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+
+        function highlightText(escaped, terms) {
+            if (!terms || !terms.length) return escaped;
+            const pattern = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).filter(Boolean).join("|");
+            if (!pattern) return escaped;
+            return escaped.replace(new RegExp(`(${pattern})`, "gi"), '<mark class="hl">$1</mark>');
+        }
+
+        function ocrSnippet(item, terms) {
+            if (!terms || !terms.length) return "";
+            const link = item.pdf_link;
+            if (!link || !allIndexData[link]) return "";
+            const text = allIndexData[link].ocr_content || "";
+            if (!text) return "";
+            const lower = text.toLowerCase();
+            let pos = -1, hitLen = 0;
+            terms.forEach(term => { const p = lower.indexOf(term); if (p >= 0 && (pos < 0 || p < pos)) { pos = p; hitLen = term.length; } });
+            if (pos < 0) return "";
+            const start = Math.max(0, pos - 70);
+            const end = Math.min(text.length, pos + hitLen + 110);
+            let frag = text.slice(start, end).replace(/\s+/g, " ").trim();
+            if (start > 0) frag = "… " + frag;
+            if (end < text.length) frag = frag + " …";
+            return `<p class="snippet">${highlightText(escapeHtml(frag), terms)}</p>`;
+        }
+
+        function parseDate(value) {
+            if (!value) return null;
+            const [day, month, year] = String(value).split("/").map(Number);
+            if (!day || !month || !year) return null;
+            // Reject source typos (e.g. 22022, 2034); orders are never future-dated.
+            if (year < 1995 || year > new Date().getFullYear() + 1) return null;
+            return new Date(Date.UTC(year, month - 1, day));
+        }
+
+        function displayDate(value) {
+            const date = parseDate(value);
+            if (!date) return escapeHtml(value || "—");
+            return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
+        }
+
+        function updateStats(payload) {
+            const latest = mainRecords.map(i => parseDate(i.order_date)).filter(Boolean).sort((a, b) => b - a)[0];
+            document.getElementById('stat-total').textContent = (payload.record_count || mainRecords.length).toLocaleString("en-IN");
+            document.getElementById('stat-pdf').textContent = (payload.with_pdf || 0).toLocaleString("en-IN");
+            document.getElementById('stat-fulltext').textContent = Object.keys(allIndexData).length.toLocaleString("en-IN");
+            document.getElementById('stat-latest').textContent = latest
+                ? latest.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : "—";
+        }
+
+        async function loadAllData() {
+            try {
+                const [dataResponse, indexResponse] = await Promise.all([
+                    fetch('proceedings-data.json'),
+                    fetch('index-data.json').catch(() => ({ ok: false, json: () => Promise.resolve({}) }))
+                ]);
+                if (!dataResponse.ok) throw new Error(`HTTP ${dataResponse.status} for proceedings-data.json`);
+                const payload = await dataResponse.json();
+                const fields = payload.fields || ["establishment", "est_code", "diary_no", "order_date", "year", "case_type_codes", "pdf"];
+                fields.forEach((name, i) => { fieldIndex[name] = i; });
+                pdfPrefix = payload.pdf_prefix || "";
+                shardManifest = (payload.shards && payload.shards[SHARDED_TYPE]) || {};
+                mainRecords = (payload.records || []).map(hydrate);
+                allIndexData = indexResponse.ok ? await indexResponse.json() : {};
+                updateStats(payload);
+                populateFilters(payload);
+                const queryFromUrl = new URLSearchParams(window.location.search).get('query');
+                if (queryFromUrl) searchInput.value = decodeURIComponent(queryFromUrl);
+                performSearch();
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="state error"><strong>Unable to load orders</strong><p>${escapeHtml(error.message)}. Serve this directory over HTTP and try again.</p></div>`;
+                resultsCount.textContent = '';
+            }
+        }
+
+        function populateFilters(payload) {
+            const types = Object.keys(payload.case_type_counts || {});
+            const years = new Set(Object.keys(shardManifest));
+            mainRecords.forEach(item => { if (item.year) years.add(item.year); });
+            types.sort().forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; typeFilter.appendChild(o); });
+            [...years].sort().reverse().forEach(y => {
+                const o = document.createElement('option');
+                o.value = y; o.textContent = y === "unknown" ? "Unknown" : y;
+                yearFilter.appendChild(o);
+            });
+        }
+
+        function recordTypes(item) { return item.case_type_codes || []; }
+
+        function hasActiveFilters() {
+            return searchInput.value.trim() !== '' || typeFilter.value !== '' || yearFilter.value !== '';
+        }
+
+        // The base set to search depends on the type filter: 14B & 7Q lives in
+        // per-year shards loaded on demand; everything else is in the main file.
+        async function activeBaseRecords() {
+            if (typeFilter.value === SHARDED_TYPE) {
+                const year = yearFilter.value;
+                if (!year) return { needYear: true, records: [] };
+                resultsContainer.innerHTML = `<div class="state"><strong>Loading ${escapeHtml(year)} 14B &amp; 7Q orders…</strong><p>${(shardManifest[year]?.count || 0).toLocaleString("en-IN")} records</p></div>`;
+                return { records: await loadShard(year) };
+            }
+            return { records: mainRecords };
+        }
+
+        function applyFilters() {
+            const type = typeFilter.value;
+            const year = yearFilter.value;
+            currentFilteredData = textMatched.filter(item => {
+                if (type && !recordTypes(item).includes(type)) return false;
+                if (year && item.year !== year) return false;
+                return true;
+            });
+            currentPage = 1;
+            displayResultsPage();
+            setupPagination();
+        }
+
+        function renderRow(item) {
+            const types = recordTypes(item);
+            const typeBadges = types.map(t => `<span class="badge">${escapeHtml(t)}</span>`).join(" ");
+            const estabHtml = highlightText(escapeHtml(item.establishment || "—"), currentTerms);
+            const codeHtml = highlightText(escapeHtml(item.est_code || ""), currentTerms);
+            const diaryHtml = highlightText(escapeHtml(item.diary_no || "—"), currentTerms);
+            const snippet = ocrSnippet(item, currentTerms);
+            const orderCell = item.pdf_link
+                ? `<a class="doc" href="${escapeHtml(item.pdf_link)}" target="_blank" rel="noopener noreferrer" title="Order PDF">PDF</a>`
+                : `<span class="no-doc">—</span>`;
+            return `
+                <tr>
+                    <td class="cell-estab" data-label="Establishment">
+                        <p class="estab-name">${estabHtml}</p>
+                        <span class="estab-code">${codeHtml}</span>
+                        ${snippet}
+                    </td>
+                    <td class="cell-diary" data-label="Diary No"><span class="mono">${diaryHtml}</span></td>
+                    <td class="cell-date" data-label="Order Date"><span class="mono">${displayDate(item.order_date)}</span></td>
+                    <td class="cell-type" data-label="Case Type">${typeBadges || "—"}</td>
+                    <td class="cell-order" data-label="Order">${orderCell}</td>
+                </tr>`;
+        }
+
+        function displayResultsPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = currentFilteredData.slice(startIndex, endIndex);
+            if (currentFilteredData.length === 0) {
+                const filtering = hasActiveFilters();
+                resultsContainer.innerHTML = `<div class="state"><strong>${filtering ? 'No matching orders' : 'No orders available'}</strong><p>${filtering ? 'Try a broader term, a different year, or clear the case-type filter.' : 'The dataset could not be loaded.'}</p></div>`;
+                resultsCount.innerHTML = filtering ? 'Found <b>0</b> orders.' : '';
+                return;
+            }
+            const rows = paginatedItems.map(renderRow).join("");
+            resultsContainer.innerHTML = `
+                <table class="ledger">
+                    <colgroup><col class="col-estab"><col class="col-diary"><col class="col-date"><col class="col-type"><col class="col-order"></colgroup>
+                    <thead><tr><th scope="col">Establishment</th><th scope="col">Diary No</th><th scope="col">Order Date</th><th scope="col">Case Type</th><th scope="col">Order</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+            resultsCount.innerHTML = `Showing <b>${(startIndex + 1).toLocaleString("en-IN")}–${Math.min(endIndex, currentFilteredData.length).toLocaleString("en-IN")}</b> of <b>${currentFilteredData.length.toLocaleString("en-IN")}</b> orders`;
+        }
+
+        function gotoPage(page) { currentPage = page; displayResultsPage(); setupPagination(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        function setupPagination() {
+            paginationControlsContainer.innerHTML = '';
+            const pageCount = Math.ceil(currentFilteredData.length / itemsPerPage);
+            if (pageCount <= 1) return;
+            const makeButton = (label, page, { disabled = false, active = false, ellipsis = false } = {}) => {
+                if (ellipsis) { const s = document.createElement('span'); s.className = 'ellipsis'; s.textContent = '…'; paginationControlsContainer.appendChild(s); return; }
+                const b = document.createElement('button');
+                b.textContent = label; b.disabled = disabled;
+                if (active) b.classList.add('active');
+                if (!disabled && !active) b.addEventListener('click', () => gotoPage(page));
+                paginationControlsContainer.appendChild(b);
+            };
+            makeButton('Prev', currentPage - 1, { disabled: currentPage === 1 });
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(pageCount, startPage + maxButtons - 1);
+            if (endPage - startPage + 1 < maxButtons) startPage = Math.max(1, endPage - maxButtons + 1);
+            if (startPage > 1) { makeButton('1', 1); if (startPage > 2) makeButton(null, null, { ellipsis: true }); }
+            for (let i = startPage; i <= endPage; i++) makeButton(String(i), i, { active: i === currentPage });
+            if (endPage < pageCount) { if (endPage < pageCount - 1) makeButton(null, null, { ellipsis: true }); makeButton(String(pageCount), pageCount); }
+            makeButton('Next', currentPage + 1, { disabled: currentPage === pageCount });
+        }
+
+        async function performSearch() {
+            const query = searchInput.value.toLowerCase().trim();
+            const base = await activeBaseRecords();
+            if (base.needYear) {
+                currentTerms = [];
+                currentFilteredData = [];
+                resultsContainer.innerHTML = `<div class="state"><strong>Pick a year for 14B &amp; 7Q orders</strong><p>These damages/interest orders are large, so they load one year at a time. Choose a year above.</p></div>`;
+                resultsCount.textContent = '';
+                paginationControlsContainer.innerHTML = '';
+                return;
+            }
+            const records = base.records;
+
+            if (!query) {
+                currentTerms = [];
+                textMatched = records;
+                const url = new URL(window.location.href);
+                url.searchParams.delete('query');
+                window.history.replaceState({}, "", url);
+            } else {
+                const url = new URL(window.location.href);
+                url.searchParams.set('query', query);
+                window.history.replaceState({}, "", url);
+                const phrases = [];
+                let tempQuery = query.replace(/"([^"]+)"/g, (m, p) => { if (p) phrases.push(p); return ""; });
+                const excludedWords = [];
+                tempQuery = tempQuery.replace(/-(\S+)/g, (m, w) => { if (w) excludedWords.push(w); return ""; });
+                const requiredTerms = tempQuery.replace(/\+/g, '').split(/\s+/).filter(t => t.length > 0);
+                currentTerms = [...requiredTerms, ...phrases];
+                textMatched = records.filter(item => {
+                    const fields = [
+                        (item.establishment || '').toLowerCase(),
+                        (item.est_code || '').toLowerCase(),
+                        (item.diary_no || '').toLowerCase(),
+                        (item.order_date || '').toLowerCase(),
+                        recordTypes(item).join(' ').toLowerCase(),
+                    ];
+                    const matches = needle => fields.some(f => f.includes(needle)) || ocrLower(item.pdf_link).includes(needle);
+                    if (excludedWords.some(matches)) return false;
+                    if (!requiredTerms.every(matches)) return false;
+                    if (!phrases.every(matches)) return false;
+                    return true;
+                });
+            }
+            applyFilters();
+        }
+
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', e => { if (e.key === 'Enter') performSearch(); });
+        typeFilter.addEventListener('change', performSearch);
+        yearFilter.addEventListener('change', performSearch);
+        window.addEventListener('popstate', () => {
+            const query = new URLSearchParams(window.location.search).get('query');
+            searchInput.value = query ? decodeURIComponent(query) : '';
+            performSearch();
+        });
+        document.addEventListener('DOMContentLoaded', loadAllData);
+    </script>
+</body>
+</html>
